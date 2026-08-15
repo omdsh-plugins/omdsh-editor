@@ -1,0 +1,29 @@
+# The omdsh-editor bundle patch: one row, inserted over whatever the profile
+# already composed.
+#
+# This package is a PROFILE LAYER, not a harness edit. `dsh plugin --profile
+# web add @omdsh-plugins/omdsh-editor` installs it into the profile directory
+# and appends it to `dsh.profile.bundles`, so this file is applied after
+# `@deepseek-ai/dsh-base` and `@deepseek-ai/dsh-web-app` — the harness tree
+# stays exactly as it shipped, and removing the plugin removes the row with
+# it.
+#
+# The row is dual-face, the ordinary `dsh.client` shape:
+#
+#   - node half (`lib/index.js`, loaded here) mounts two routes under
+#     `/omdsh-editor`: which applications this host has, and open one of them
+#     on a conversation's directory. It needs `webServer` for the carrier,
+#     `sessions` for the authoritative working directory, and `webRuntime`
+#     for the bind-derived trust list its fence checks against — all three
+#     are host-plane services the web profile already composes, so the loader
+#     resolves this row after them;
+#   - browser half (`lib/client.js`) is picked up by `dsh-client-modules`,
+#     which scans every loader entry for a `dsh.client` declaration — an
+#     out-of-tree row is found exactly like an in-box one. It contributes one
+#     entry to `conversation.session.header.utilities` and declares nothing,
+#     so unloading the row takes the picker with it and leaves the header as
+#     it shipped.
+
+- insert:
+    - id: editor
+      name: '@omdsh-plugins/omdsh-editor'

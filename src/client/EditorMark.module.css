@@ -1,0 +1,20 @@
+/* One application's own icon.
+
+   App icons are authored with their own padding and their own silhouette, so
+   nothing is cropped, masked or tinted here — the whole point is that the row
+   shows what the Dock shows. */
+
+.icon {
+  flex: none;
+  object-fit: contain;
+  /* An icon is opaque artwork over a dark menu; rendering it at the browser's
+     default quality is what keeps a 64px source crisp at 16px. */
+  image-rendering: auto;
+}
+
+/* Disabled rows and the busy trigger. The glyph fallback greys out by
+   inheriting `color`, which real artwork cannot do, so it dims instead. */
+:disabled .icon,
+[aria-disabled='true'] .icon {
+  opacity: 0.4;
+}

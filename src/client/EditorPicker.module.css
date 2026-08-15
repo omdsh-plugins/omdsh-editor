@@ -1,0 +1,74 @@
+/* The split capsule in the session header's utility row.
+
+   Sized against the header's other utilities (32px tall, pill radius, hairline
+   border, transparent until hovered) so it reads as one of them rather than as
+   something a plugin bolted on. The split is a hairline between the two halves
+   and nothing else — a second border or a gap would make it two controls. */
+
+.capsule {
+  display: inline-flex;
+  align-items: stretch;
+  height: 32px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 18px;
+  background: transparent;
+  overflow: hidden;
+}
+
+/* A failed open leaves the capsule marked until the next attempt, because the
+   message itself lives in the menu the user has already closed. */
+.faulted {
+  border-color: var(--dsw-alias-border-error, var(--dsw-alias-border-l2));
+}
+
+.primary,
+.chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+  transition: background var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .chevron {
+    transition: none;
+  }
+}
+
+.primary {
+  padding: 0 8px 0 12px;
+}
+
+.chevron {
+  padding: 0 8px 0 4px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.primary:hover:not(:disabled),
+.chevron:hover:not(:disabled) {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.primary:disabled,
+.chevron:disabled {
+  color: var(--dsw-alias-label-dimmed);
+  /* `wait`, not `not-allowed`: the control is disabled because the editor is
+     starting, which is a moment to wait out rather than a refusal. */
+  cursor: wait;
+}
+
+/* The hairline between the verb and the chooser. A pseudo-element rather than
+   a border on either button, so neither half's hover fill covers it. */
+.chevron::before {
+  content: '';
+  align-self: center;
+  width: 1px;
+  height: 16px;
+  margin-right: 4px;
+  background: var(--dsw-alias-border-l2);
+}

@@ -1,0 +1,18 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store
+
+# lib/ is COMMITTED, not ignored: this plugin is installed by git URL, and a
+# git dependency can only build itself through `prepare` — which cannot work
+# here, because building needs the harness packages and the published ones are
+# not installable (0.0.1-rc.1 pulls @deepseek-ai/dsh-compact and
+# @deepseek-ai/dsh-type-meta, neither of which is on the registry). Shipping
+# the artifacts is what makes `dsh plugin add github:...` work at all, and it
+# means no install-time code runs on the installing machine.
+#
+# Only what package.json's `files` ships is tracked; the tsc intermediates
+# tsdown consumes are not.
+lib/types/**/*.js
+lib/types/**/*.js.map

@@ -1,0 +1,21 @@
+/* One application's mark: a kind glyph tinted with the product's accent.
+
+   The stroke rides `currentColor`, and the component sets `color` inline from
+   host data — which is what lets a disabled row grey the whole glyph out with
+   a single inherited override rather than needing to know the accent. */
+
+.glyph {
+  flex: none;
+  color: var(--dsw-alias-label-secondary);
+  stroke: currentcolor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Disabled rows and the busy trigger: the accent is a live affordance, so it
+   goes away with the affordance rather than staying bright over a dead row. */
+:disabled .glyph,
+[aria-disabled='true'] .glyph {
+  color: var(--dsw-alias-label-dimmed) !important;
+}
