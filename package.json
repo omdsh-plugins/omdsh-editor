@@ -46,7 +46,14 @@
       "displayName": {
         "": "External Editor",
         "zh": "外部编辑器"
-      }
+      },
+      "summary": {
+        "": "Open the conversation's directory in the editor, terminal, or file manager you actually use.",
+        "zh": "用你真正在用的编辑器、终端或文件管理器打开当前会话的目录。"
+      },
+      "category": "workspace",
+      "docs": "https://github.com/omdsh-plugins/omdsh-editor#readme",
+      "order": 40
     }
   },
   "files": [

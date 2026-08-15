@@ -25,11 +25,6 @@ export class EditorError extends Error {
   }
 }
 
-/** Message text of an unknown thrown value. */
-export function messageOf(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
-}
-
 /**
  * Answer with one JSON value.
  * @param res - the response being written.

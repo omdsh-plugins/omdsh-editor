@@ -4,6 +4,7 @@
  * Product names are absent on purpose: "VS Code" and "iTerm2" are what their
  * vendors call them in every language, and they arrive from the host's catalog
  * rather than from here. Only the harness's own words are translated.
+ * @module @omdsh-plugins/omdsh-editor/src/client/locales
  */
 
 /** Dictionary namespace owned by this plugin. */
@@ -19,8 +20,6 @@ export const zh = {
   'loading': '正在查找已安装的编辑器…',
   'empty': '在这台主机上没有找到编辑器',
   'empty.remote': '在运行 dsh 的主机（{platform}）上没有找到编辑器',
-  'remote.note': '编辑器会在运行 dsh 的主机上打开',
-  'retry': '重试',
   'failed': '打开失败：{reason}',
 } satisfies Record<string, string>
 
@@ -37,7 +36,5 @@ export const en = {
   'loading': 'Looking for installed editors…',
   'empty': 'No editor found on this machine',
   'empty.remote': 'No editor found on the machine running dsh ({platform})',
-  'remote.note': 'Editors open on the machine running dsh',
-  'retry': 'Try again',
   'failed': 'Could not open: {reason}',
 } satisfies Record<EditorKey, string>

@@ -15,7 +15,7 @@
 
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type { SessionId, SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
-import type { CatalogStatus, EditorPickerState } from './contract.ts'
+import type { EditorPickerState } from './contract.ts'
 import type { EditorCatalogBody, EditorDescriptor, EditorErrorBody, OpenRequestBody } from '../shared.ts'
 import { EDITORS_PATH, OPEN_PATH } from '../shared.ts'
 
@@ -217,6 +217,3 @@ export class EditorPickerController {
     this.store.set({ ...this.store.getSnapshot(), ...next })
   }
 }
-
-/** Re-exported for the spec that pins the status vocabulary. */
-export type { CatalogStatus }

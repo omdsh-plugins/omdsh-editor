@@ -43,6 +43,8 @@ which takes the bundle row, the routes, and the control with it.
 
 `link:` means pnpm neither builds the package nor installs its dependencies — neither matters here, because the node half imports only Node builtins and the browser half inlines `clsx`. It does mean a rebuild after editing sources is yours to run.
 
+There is no companion plugin to be absent. Every service either half injects is a harness one the profile already composes — `webServer`, `sessions`, and `webRuntime` on the host, `slots` and `locale` in the browser — so nothing else from this collection has to be installed beside it, and nothing else changes what it does. `webRuntime` is the web surface bundle's, which is what makes this a web-profile row: it carries the trust list the fence checks against, and a surface with no web server has no browser to serve anyway.
+
 ## Which machine the editor opens on
 
 **The one running the runtime.** That is where the project directory is, which makes it the only machine where opening the folder means anything, and it is where the harness's own model already puts the work.
@@ -61,7 +63,7 @@ Putting this in the Electron shell instead would have made the capability exclus
 
 Only the ones this host actually has are listed. Detection is a `stat` per candidate and nothing else — no `mdfind`, no registry read, no subprocess — so the whole sweep is a few milliseconds and the menu is a plain list rather than a dialog to wait on. The result is cached for 15 seconds, which is short enough that an editor installed while the harness runs shows up without a restart.
 
-An application this table does not know is invisible. Adding one is four lines in [`src/catalog.ts`](src/catalog.ts), or a `editors` entry in the plugin's configuration, which replaces the shipped table outright.
+An application this table does not know is invisible. Adding one is four lines in [`src/catalog.ts`](src/catalog.ts), or an `editors` entry in the plugin's configuration, which replaces the shipped table outright.
 
 ## How an application is found and started
 
@@ -118,7 +120,16 @@ pnpm run typecheck   # sources and tests
 pnpm run test        # vitest
 ```
 
-`devDependencies` point at a sibling `deepseek-harness` checkout through `link:`, so building needs one beside this repository.
+The committed manifest pins the published harness, so a bare clone installs and builds itself. To build against a sibling checkout instead:
+
+```sh
+pnpm run harness:local ../../deepseek-harness   # that checkout must be built first
+pnpm install
+pnpm run harness:npm                            # before committing — a link: is one machine's layout
+pnpm run check:harness-pin
+```
+
+The node-only specs run from a bare clone on the pin. The three browser specs need the checkout: the harness's published browser packages ship a loader bundle a test runner cannot import, so on the pin they resolve to [`tests/registry-mode-guard.ts`](tests/registry-mode-guard.ts) and fail with a message saying so.
 
 ## Known limitations and deferred work
 

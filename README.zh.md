@@ -43,6 +43,8 @@ dsh plugin --profile web remove @omdsh-plugins/omdsh-editor
 
 `link:` 意味着 pnpm 既不构建这个包也不装它的依赖——这两件在这里都不要紧，因为 node 半边只 import Node 内置模块，浏览器半边把 `clsx` 打进了 bundle。但它确实意味着改完源码后重新构建要你自己跑。
 
+没有"缺了就不工作"的伙伴插件。两半 inject 的每一个服务都是 profile 已经组合好的 harness 服务——宿主侧是 `webServer`、`sessions`、`webRuntime`，浏览器侧是 `slots` 和 `locale`——所以不必再装这个集合里的任何别的插件，别的插件也不会改变它的行为。`webRuntime` 来自 web 形态的 bundle，这也正是这一行属于 web profile 的原因：信任围栏要比对的那份清单就在它上面，而一个没有网页服务器的形态本来也没有浏览器要服务。
+
 ## 编辑器在哪台机器上打开
 
 **运行 runtime 的那台。** 项目目录就在那里，所以那是唯一一台"打开这个文件夹"有意义的机器，也正是 harness 自身模型里工作发生的地方。
@@ -118,7 +120,16 @@ pnpm run typecheck   # 源码与测试
 pnpm run test        # vitest
 ```
 
-`devDependencies` 通过 `link:` 指向同级的 `deepseek-harness` 检出，所以构建需要本仓库旁边有一份。
+提交的 manifest 固定指向已发布的 harness，所以裸 clone 自己就能安装和构建。要改成对着同级的 checkout 构建：
+
+```sh
+pnpm run harness:local ../../deepseek-harness   # 那个 checkout 需要先构建过
+pnpm install
+pnpm run harness:npm                            # 提交前务必执行 —— link: 是某一台机器的目录布局
+pnpm run check:harness-pin
+```
+
+只跑 node 的用例在裸 clone + 固定版本下都能过。三个浏览器用例需要那份 checkout：harness 已发布的浏览器包只提供测试运行器无法 import 的 loader bundle，所以在固定版本下它们会解析到 [`tests/registry-mode-guard.ts`](tests/registry-mode-guard.ts)，并以一条说明原因的报错失败。
 
 ## 已知限制与待办
 

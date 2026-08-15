@@ -1,0 +1,12 @@
+# pnpm 10+ blocks any dependency shipping an install/build script until it is
+# explicitly reviewed here.
+#
+# The file is not optional bookkeeping: without it pnpm walks up out of this
+# repository looking for a workspace root, and a clone that happens to sit
+# beside other checkouts resolves against one of them instead of itself.
+allowBuilds:
+  # tsdown bundles the browser half through esbuild, whose install script
+  # selects the prebuilt binary for this platform. Denying it leaves the
+  # package with no bundler, so `prepare` — the only thing that builds a git
+  # dependency on the installing machine — fails.
+  esbuild: true

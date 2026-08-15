@@ -11,6 +11,7 @@
  * The glyphs are drawn here rather than taken from ui-primitives because the
  * shipped set has no terminal mark, and three hand-drawn paths that agree with
  * each other beat two borrowed ones and an odd third.
+ * @module @omdsh-plugins/omdsh-editor/src/client/EditorGlyph
  */
 
 import type { ReactNode } from 'react'

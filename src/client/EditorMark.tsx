@@ -11,6 +11,7 @@
  * still reach it: a host whose applications are not macOS bundles, and a
  * bundle whose icon cannot be identified. It also covers the moment before the
  * image has loaded, so a menu never opens onto blank space where marks go.
+ * @module @omdsh-plugins/omdsh-editor/src/client/EditorMark
  */
 
 import { useEffect, useState } from 'react'

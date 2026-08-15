@@ -13,6 +13,7 @@
  * showing the user which folder is about to open is worth a lookup, and being
  * wrong about it costs nothing, because the host never takes the browser's
  * word for the path.
+ * @module @omdsh-plugins/omdsh-editor/src/client/EditorPicker
  */
 
 import { useMemo, useRef, useState } from 'react'
