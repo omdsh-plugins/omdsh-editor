@@ -1,8 +1,8 @@
-# `@omdsh-plugins/omdsh-editor`
+# omdsh-editor
 
 English | [中文](README.zh.md)
 
-Open the project you are working in with the editor you actually use. A split control in the session header: press the left half and the conversation's directory opens in the editor you chose last time, press the chevron and pick a different one.
+Open the project you are working in with the editor you actually use. A split control in the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) web GUI's session header: press the left half and the conversation's directory opens in the editor you chose last time, press the chevron and pick a different one.
 
 The harness has no such capability and no seam that would let one be reached around it, so this package adds both halves — the host side that finds the applications and starts one, and the browser side that offers them.
 
@@ -20,30 +20,17 @@ The harness has no such capability and no seam that would let one be reached aro
                                        └───────────────────────┘
 ```
 
-## Installing
+## What it adds
 
-`dsh plugin --profile <name> <args…>` is a thin `pnpm` forwarder run inside the profile directory (`~/.dsh/profiles/web`, or `$DSH_HOME/profiles/web`). It takes anything pnpm takes, and then reconciles `dsh.profile.bundles` against what is installed.
+| Surface | Where it comes from |
+|---|---|
+| The split editor control, at the right of the session header | One entry in `conversation.session.header.utilities`, the utility row ui-conversation already declares |
+| `GET /omdsh-editor/editors` | The applications this host actually has, and its `process.platform` — a `stat` per catalog row, cached for 15 seconds |
+| `GET /omdsh-editor/icon?id=…` | Each application's own icon, read out of the copy installed on this host and served as PNG |
+| `POST /omdsh-editor/open` | The launch: the session's own working directory, handed to a detached child process |
+| The remembered choice | `localStorage` in the browser half, which is what lets the left half of the control be a verb |
 
-This package is unpublished, so install it from this checkout:
-
-```sh
-pnpm install && pnpm run build                 # lib/ must exist; link: does not build
-dsh plugin --profile web add link:/absolute/path/to/omdsh-editor
-```
-
-A relative spec is anchored to the directory you invoked `dsh` from, so from inside this checkout `dsh plugin --profile web add link:.` is the same thing. Either way the profile manifest gains the dependency and `@omdsh-plugins/omdsh-editor` is appended to `dsh.profile.bundles`, so [`cordis.patch.yml`](cordis.patch.yml) is applied after `@deepseek-ai/dsh-base` and `@deepseek-ai/dsh-web-app`. The harness tree stays exactly as it shipped.
-
-Restart the runtime to pick it up (`dsh web`, or quit and reopen the desktop application). To remove it:
-
-```sh
-dsh plugin --profile web remove @omdsh-plugins/omdsh-editor
-```
-
-which takes the bundle row, the routes, and the control with it.
-
-`link:` means pnpm neither builds the package nor installs its dependencies — neither matters here, because the node half imports only Node builtins and the browser half inlines `clsx`. It does mean a rebuild after editing sources is yours to run.
-
-There is no companion plugin to be absent. Every service either half injects is a harness one the profile already composes — `webServer`, `sessions`, and `webRuntime` on the host, `slots` and `locale` in the browser — so nothing else from this collection has to be installed beside it, and nothing else changes what it does. `webRuntime` is the web surface bundle's, which is what makes this a web-profile row: it carries the trust list the fence checks against, and a surface with no web server has no browser to serve anyway.
+Nothing in the harness is modified. The three routes ride one prefix registration on `webServer`, the control sits in a published seat, and the package declares no slot of its own — so removing the row leaves the header exactly as it shipped.
 
 ## Which machine the editor opens on
 
@@ -58,12 +45,12 @@ Putting this in the Electron shell instead would have made the capability exclus
 | Kind | Applications |
 |---|---|
 | Editors | VS Code, VS Code Insiders, Cursor, Windsurf, Zed, Sublime Text, IntelliJ IDEA, PyCharm, WebStorm, Xcode |
-| Files | Finder, File Explorer, `xdg-open` |
+| Files | Finder, File Explorer, File Manager (`xdg-open`) |
 | Terminals | Terminal, iTerm2, Warp, Ghostty, WezTerm, kitty, Alacritty |
 
 Only the ones this host actually has are listed. Detection is a `stat` per candidate and nothing else — no `mdfind`, no registry read, no subprocess — so the whole sweep is a few milliseconds and the menu is a plain list rather than a dialog to wait on. The result is cached for 15 seconds, which is short enough that an editor installed while the harness runs shows up without a restart.
 
-An application this table does not know is invisible. Adding one is four lines in [`src/catalog.ts`](src/catalog.ts), or an `editors` entry in the plugin's configuration, which replaces the shipped table outright.
+An application this table does not know is invisible. Adding one is a dozen lines in [`src/catalog.ts`](src/catalog.ts), or an `editors` entry in the plugin's configuration, which replaces the shipped table outright — see [configuring it](#configuring-it).
 
 ## How an application is found and started
 
@@ -80,6 +67,30 @@ The bundle is preferred over a CLI shim because it survives a GUI session whose 
 Four terminals (Ghostty, WezTerm, kitty, Alacritty) are listed by their CLI only. Their working directory is a flag rather than a document, and `open -a` cannot pass a flag to a running instance; a bundle probe would light the row up and then open the wrong directory, which is worse than the row being absent.
 
 The child is detached into its own process group with its streams closed and then unreferenced, so quitting the harness — or one of the desktop shell's own memory-policy restarts — does not close the window you are typing in.
+
+## Configuring it
+
+**This plugin registers no settings namespace**, so its card in the plugin hub — titled **External Editor** there, from the `dsh.plughub` metadata in `package.json` — carries no form and honestly says it has nothing to configure. There is nothing a person tunes while using it: which applications exist is the host's answer, and which one the left half opens is remembered from the last press.
+
+What it does take is composition configuration, written on the bundle row in the profile's `cordis.patch.yml`:
+
+```yaml
+- id: editor
+  name: '@omdsh-plugins/omdsh-editor'
+  config:
+    editors:                                  # replaces the shipped table outright
+      - id: nvim
+        label: Neovim
+        kind: terminal                        # code | terminal | files
+        accent: '#57a143'
+        probes:
+          - { kind: path-bin, bin: nvim }     # mac-app | path-bin | windows-exe
+    detectionTtlMs: 60000                     # default 15000
+```
+
+`editors` is the whole table, not an addition to it: naming one row means that row is the only application offered, so a deployment adding one usually copies the shipped set from [`src/catalog.ts`](src/catalog.ts) first. `args` may be given for a launcher that spells its working directory as a flag (`['--working-directory={dir}']`); absent, the directory is simply appended, which is what every editor's CLI shim already means.
+
+`detectionTtlMs` is how long one detection sweep stays fresh. The default is short enough that an editor installed while the harness runs shows up without a restart, and there is rarely a reason to change it.
 
 ## The routes
 
@@ -111,6 +122,35 @@ Extraction is pure Node, no `sips` and no subprocess: an `.icns` is a flat type-
 
 Three things can leave a row without one — a host whose applications are not macOS bundles, a bundle using a compiled asset catalog rather than an `.icns`, and one whose `Resources` holds many `.icns` with none identifiable as the app's own. All three fall back to a glyph of the row's kind tinted in the product's accent, which is still enough to tell the rows apart. The catalog answer carries `icon: boolean` so the picker only requests icons that exist, and the `<img>` falls back on error anyway.
 
+## Install
+
+```sh
+dsh plugin --profile web add @omdsh-plugins/omdsh-editor
+```
+
+`dsh plugin --profile <name> <args…>` is a thin `pnpm` forwarder run inside the profile directory (`~/.dsh/profiles/web`, or `$DSH_HOME/profiles/web`). It takes anything pnpm takes, and then reconciles `dsh.profile.bundles` against what is installed.
+
+Or from a checkout, which is what working on the plugin itself wants:
+
+```sh
+pnpm install && pnpm run build                 # lib/ must exist; a path install never runs prepare
+dsh plugin --profile web add "$PWD"
+```
+
+A relative spec is anchored to the directory you invoked `dsh` from. Either way the profile manifest gains the dependency and `@omdsh-plugins/omdsh-editor` is appended to `dsh.profile.bundles`, so [`cordis.patch.yml`](cordis.patch.yml) is applied after `@deepseek-ai/dsh-base` and `@deepseek-ai/dsh-web-app`. The harness tree stays exactly as it shipped.
+
+Restart the runtime to pick it up (`dsh web`, or quit and reopen the desktop application). Remove it the same way:
+
+```sh
+dsh plugin --profile web remove @omdsh-plugins/omdsh-editor
+```
+
+which takes the bundle row, the routes, and the control with it, leaving the session header as it shipped.
+
+A checkout install records a `link:`, which means pnpm neither builds the package nor installs its dependencies — neither matters here, because the node half imports only Node builtins and the browser half inlines `clsx`. It does mean a rebuild after editing sources is yours to run.
+
+**There is no companion plugin to be absent.** Every service either half injects is a harness one the profile already composes — `webServer`, `sessions`, and `webRuntime` on the host, `slots` and `locale` in the browser — so nothing else from this collection has to be installed beside it, and nothing else changes what it does. `webRuntime` is the web surface bundle's, which is what makes this a web-profile row: it carries the trust list the fence checks against, and a surface with no web server has no browser to serve anyway.
+
 ## Commands
 
 ```sh
@@ -131,7 +171,7 @@ pnpm run check:harness-pin
 
 The node-only specs run from a bare clone on the pin. The three browser specs need the checkout: the harness's published browser packages ship a loader bundle a test runner cannot import, so on the pin they resolve to [`tests/registry-mode-guard.ts`](tests/registry-mode-guard.ts) and fail with a message saying so.
 
-## Known limitations and deferred work
+## Known limitations
 
 - **Editors are found from a table.** A host with something unusual installed sees a shorter list than it has. "What editors exist on this machine" is not a question with an answer; the escape hatch is the `editors` configuration.
 - **Success means the process started.** Once the child is detached there is no exit code to wait for, so an editor that starts and then refuses the directory itself reports nothing back. The spawn window is 150ms — long enough for Node to deliver an `ENOENT`, short enough to be invisible.

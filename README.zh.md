@@ -1,8 +1,8 @@
-# `@omdsh-plugins/omdsh-editor`
+# omdsh-editor
 
 [English](README.md) | 中文
 
-用你真正在用的编辑器打开当前项目。会话标题栏右侧的一个分体控件：按左半边，当前会话的目录就在你上次选的编辑器里打开；按右边的箭头，换一个。
+用你真正在用的编辑器打开当前项目。[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 网页界面的会话标题栏右侧多出一个分体控件：按左半边，当前会话的目录就在你上次选的编辑器里打开；按右边的箭头，换一个。
 
 harness 本身没有这个能力，也没有可以绕过它去实现的接缝，所以这个包同时提供两半——负责查找并启动应用的宿主半边，和负责呈现选择的浏览器半边。
 
@@ -20,30 +20,17 @@ harness 本身没有这个能力，也没有可以绕过它去实现的接缝，
                                        └───────────────────────┘
 ```
 
-## 安装
+## 它提供什么
 
-`dsh plugin --profile <名字> <参数…>` 是一层很薄的 `pnpm` 转发，在 profile 目录（`~/.dsh/profiles/web`，或 `$DSH_HOME/profiles/web`）里执行。pnpm 收什么它就收什么，之后再把 `dsh.profile.bundles` 与实际安装状态对齐。
+| 界面 | 从哪来 |
+|---|---|
+| 会话标题栏右侧的分体编辑器控件 | `conversation.session.header.utilities` 里的一个条目——ui-conversation 已经声明好的工具行 |
+| `GET /omdsh-editor/editors` | 这台主机真正装了哪些应用，以及它的 `process.platform`——每个候选一次 `stat`，结果缓存 15 秒 |
+| `GET /omdsh-editor/icon?id=…` | 每个应用自己的图标，从这台主机上已安装的那份里读出来，按 PNG 提供 |
+| `POST /omdsh-editor/open` | 启动本身：以会话自己的工作目录为准，交给一个 detach 出去的子进程 |
+| 记住的那个选择 | 浏览器半边的 `localStorage`——正是它让控件的左半边能成为一个动词 |
 
-本包未发布，所以从这份检出安装：
-
-```sh
-pnpm install && pnpm run build                 # 必须先有 lib/；link: 不会帮你构建
-dsh plugin --profile web add link:/omdsh-editor/的绝对路径
-```
-
-相对路径会以你执行 `dsh` 时所在的目录为锚，所以在这份检出里 `dsh plugin --profile web add link:.` 是同一件事。两种写法都会让 profile 清单多出这条依赖，并把 `@omdsh-plugins/omdsh-editor` 追加到 `dsh.profile.bundles`，于是 [`cordis.patch.yml`](cordis.patch.yml) 会在 `@deepseek-ai/dsh-base` 和 `@deepseek-ai/dsh-web-app` 之后生效。harness 的目录树保持出厂原样。
-
-重启 runtime 才会生效（重跑 `dsh web`，或退出并重开桌面应用）。移除：
-
-```sh
-dsh plugin --profile web remove @omdsh-plugins/omdsh-editor
-```
-
-这会同时带走 bundle 行、路由和这个控件。
-
-`link:` 意味着 pnpm 既不构建这个包也不装它的依赖——这两件在这里都不要紧，因为 node 半边只 import Node 内置模块，浏览器半边把 `clsx` 打进了 bundle。但它确实意味着改完源码后重新构建要你自己跑。
-
-没有"缺了就不工作"的伙伴插件。两半 inject 的每一个服务都是 profile 已经组合好的 harness 服务——宿主侧是 `webServer`、`sessions`、`webRuntime`，浏览器侧是 `slots` 和 `locale`——所以不必再装这个集合里的任何别的插件，别的插件也不会改变它的行为。`webRuntime` 来自 web 形态的 bundle，这也正是这一行属于 web profile 的原因：信任围栏要比对的那份清单就在它上面，而一个没有网页服务器的形态本来也没有浏览器要服务。
+harness 本身没有任何改动。三条路由挂在 `webServer` 上的同一次前缀注册里，控件坐的是一个已经发布的座位，本包不声明任何自己的 slot——所以移除这一行之后，标题栏就是出厂的样子。
 
 ## 编辑器在哪台机器上打开
 
@@ -53,17 +40,17 @@ dsh plugin --profile web remove @omdsh-plugins/omdsh-editor
 
 把它做进 Electron 外壳会让这个能力只属于打包后的应用，而终端里的 `dsh web` 同样需要它。
 
-## 它能提供什么
+## 它能打开哪些应用
 
 | 类别 | 应用 |
 |---|---|
 | 编辑器 | VS Code、VS Code Insiders、Cursor、Windsurf、Zed、Sublime Text、IntelliJ IDEA、PyCharm、WebStorm、Xcode |
-| 文件 | Finder、文件资源管理器、`xdg-open` |
+| 文件 | Finder、文件资源管理器、File Manager（`xdg-open`） |
 | 终端 | Terminal、iTerm2、Warp、Ghostty、WezTerm、kitty、Alacritty |
 
 只列出这台主机真正装了的。探测就是每个候选一次 `stat`，仅此而已——没有 `mdfind`，不读注册表，不起子进程——所以整轮扫描是几毫秒，菜单是一个直接展开的列表而不是一个要等的对话框。结果缓存 15 秒，短到在 harness 运行期间装的编辑器不用重启就会出现。
 
-表里没有的应用是看不见的。加一个是 [`src/catalog.ts`](src/catalog.ts) 里的四行，或者插件配置里的一项 `editors`——后者会整体替换出厂的表。
+表里没有的应用是看不见的。加一个是 [`src/catalog.ts`](src/catalog.ts) 里的十来行，或者插件配置里的一项 `editors`——后者会整体替换出厂的表，见[怎么配置它](#怎么配置它)。
 
 ## 一个应用是怎么被找到和启动的
 
@@ -80,6 +67,30 @@ dsh plugin --profile web remove @omdsh-plugins/omdsh-editor
 有四个终端（Ghostty、WezTerm、kitty、Alacritty）只按命令行形态收录。它们的工作目录是一个 flag 而不是一份"文档"，而 `open -a` 没法把 flag 传给已在运行的实例；如果给它们加 bundle 探测，那一行会亮起来然后打开错误的目录——这比这一行干脆不出现更糟。
 
 子进程被 detach 到自己的进程组、关闭流、然后 unref，所以退出 harness——或者桌面外壳按自己的内存策略做的一次重启——不会关掉你正在敲字的窗口。
+
+## 怎么配置它
+
+**这个插件不注册 settings 命名空间**，所以它在插件中心里的那张卡片——那里按 `package.json` 的 `dsh.plughub` 元数据显示为 **External Editor**（外部编辑器）——没有表单，并且会明确说它没有可配置项。用起来本来也没有什么要调的：装了哪些应用是主机的回答，左半边开哪一个则是上次按下时记住的。
+
+它确实接受的是组装层的配置，写在 profile 的 `cordis.patch.yml` 里那一行 bundle 上：
+
+```yaml
+- id: editor
+  name: '@omdsh-plugins/omdsh-editor'
+  config:
+    editors:                                  # 整体替换出厂的表
+      - id: nvim
+        label: Neovim
+        kind: terminal                        # code | terminal | files
+        accent: '#57a143'
+        probes:
+          - { kind: path-bin, bin: nvim }     # mac-app | path-bin | windows-exe
+    detectionTtlMs: 60000                     # 默认 15000
+```
+
+`editors` 是整张表，不是往表里追加：只写一行就意味着只提供这一个应用，所以想加一个的部署通常先把 [`src/catalog.ts`](src/catalog.ts) 里出厂的那份抄过来。把工作目录写成 flag 的启动器可以再给一项 `args`（`['--working-directory={dir}']`）；不写就是把目录直接接在后面，这也正是每个编辑器的命令行 shim 本来的含义。
+
+`detectionTtlMs` 是一轮探测的新鲜期。默认值短到在 harness 运行期间装的编辑器不用重启就会出现，一般没有理由去改它。
 
 ## 路由
 
@@ -111,6 +122,35 @@ dsh plugin --profile web remove @omdsh-plugins/omdsh-editor
 
 三种情况会让某一行没有真图标——应用不是 macOS bundle 的主机、用编译后的 asset catalog 而非 `.icns` 的 bundle、以及 `Resources` 里一堆 `.icns` 但认不出哪个是应用自己的。三种都回退到该行类别的字形、染上产品主色，仍然足以分辨。catalog 响应里带 `icon: boolean`，所以选择器只会去请求确实存在的图标；即便如此 `<img>` 出错时也会自己回退。
 
+## 安装
+
+```sh
+dsh plugin --profile web add @omdsh-plugins/omdsh-editor
+```
+
+`dsh plugin --profile <名字> <参数…>` 是一层很薄的 `pnpm` 转发，在 profile 目录（`~/.dsh/profiles/web`，或 `$DSH_HOME/profiles/web`）里执行。pnpm 收什么它就收什么，之后再把 `dsh.profile.bundles` 与实际安装状态对齐。
+
+或者从一份检出安装，改这个插件本身时要的就是这种：
+
+```sh
+pnpm install && pnpm run build                 # 必须先有 lib/；按路径安装不会执行 prepare
+dsh plugin --profile web add "$PWD"
+```
+
+相对路径会以你执行 `dsh` 时所在的目录为锚。两种写法都会让 profile 清单多出这条依赖，并把 `@omdsh-plugins/omdsh-editor` 追加到 `dsh.profile.bundles`，于是 [`cordis.patch.yml`](cordis.patch.yml) 会在 `@deepseek-ai/dsh-base` 和 `@deepseek-ai/dsh-web-app` 之后生效。harness 的目录树保持出厂原样。
+
+重启 runtime 才会生效（重跑 `dsh web`，或退出并重开桌面应用）。移除也是同一种写法：
+
+```sh
+dsh plugin --profile web remove @omdsh-plugins/omdsh-editor
+```
+
+这会同时带走 bundle 行、路由和这个控件，会话标题栏回到出厂的样子。
+
+按路径安装记的是 `link:`，也就是说 pnpm 既不构建这个包也不装它的依赖——这两件在这里都不要紧，因为 node 半边只 import Node 内置模块，浏览器半边把 `clsx` 打进了 bundle。但它确实意味着改完源码后重新构建要你自己跑。
+
+**没有"缺了就不工作"的伙伴插件。** 两半 inject 的每一个服务都是 profile 已经组合好的 harness 服务——宿主侧是 `webServer`、`sessions`、`webRuntime`，浏览器侧是 `slots` 和 `locale`——所以不必再装这个集合里的任何别的插件，别的插件也不会改变它的行为。`webRuntime` 来自 web 形态的 bundle，这也正是这一行属于 web profile 的原因：信任围栏要比对的那份清单就在它上面，而一个没有网页服务器的形态本来也没有浏览器要服务。
+
 ## 命令
 
 ```sh
@@ -131,7 +171,7 @@ pnpm run check:harness-pin
 
 只跑 node 的用例在裸 clone + 固定版本下都能过。三个浏览器用例需要那份 checkout：harness 已发布的浏览器包只提供测试运行器无法 import 的 loader bundle，所以在固定版本下它们会解析到 [`tests/registry-mode-guard.ts`](tests/registry-mode-guard.ts)，并以一条说明原因的报错失败。
 
-## 已知限制与待办
+## 已知限制
 
 - **编辑器来自一张表。** 装了冷门工具的主机看到的列表会比实际短。"这台机器上存在哪些编辑器"本身不是一个有答案的问题；逃生舱是 `editors` 配置。
 - **成功只意味着进程起来了。** 子进程 detach 之后没有退出码可等，所以一个启动了但自己拒绝了该目录的编辑器不会把这件事报回来。spawn 观察窗口是 150ms——长到足够 Node 送达一次 `ENOENT`，短到在界面上看不出来。
