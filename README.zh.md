@@ -125,8 +125,20 @@ harness 本身没有任何改动。三条路由挂在 `webServer` 上的同一�
 ## 安装
 
 ```sh
-dsh plugin --profile web add @omdsh-plugins/omdsh-editor
+npx @omdsh-plugins/omdsh-plughub add omdsh-editor
 ```
+
+这就是[插件中心](https://github.com/omdsh-plugins/omdsh-plughub)的安装器，只是入
+口从按钮换成了 argv。它从这套集合的
+[registry](https://github.com/omdsh-plugins/registry) 里解析出这个插件、从它的
+GitHub 仓库装上，并把那条 pnpm 构建白名单写好——裸的 `dsh plugin add github:…`
+会把这一步留给你，而那条记录里带着 pnpm 解析出来的 commit，只能从报错里抄，事先
+写不出来。
+
+`dsh plugin --profile web add @omdsh-plugins/omdsh-editor` 现在**还不是**那条命令：这个
+包不在 npm 上，pnpm 会回 `ERR_PNPM_FETCH_404`。同样这一次安装也可以是一个按钮——
+只要 profile 里已经有插件中心，它就在**设置 → 插件 → 插件中心**里这个插件的卡片
+上。
 
 `dsh plugin --profile <名字> <参数…>` 是一层很薄的 `pnpm` 转发，在 profile 目录（`~/.dsh/profiles/web`，或 `$DSH_HOME/profiles/web`）里执行。pnpm 收什么它就收什么，之后再把 `dsh.profile.bundles` 与实际安装状态对齐。
 
