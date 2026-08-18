@@ -10,3 +10,8 @@ allowBuilds:
   # package with no bundler, so `prepare` — the only thing that builds a git
   # dependency on the installing machine — fails.
   esbuild: true
+
+# Every harness package is pinned to one release this plugin chooses
+# deliberately, so pnpm's release-age gate has nothing left to protect and its
+# generated per-package exclusion list would only churn on every bump.
+minimumReleaseAge: 0
