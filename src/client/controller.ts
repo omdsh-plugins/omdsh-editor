@@ -13,8 +13,9 @@
  * @module @omdsh-plugins/omdsh-editor/src/client/controller
  */
 
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
-import type { SessionId, SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
+import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type { SessionId } from '@deepseek-ai/dsh-session'
+import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { EditorPickerState } from './contract.ts'
 import type { EditorCatalogBody, EditorDescriptor, EditorErrorBody, OpenRequestBody } from '../shared.ts'
 import { EDITORS_PATH, OPEN_PATH } from '../shared.ts'

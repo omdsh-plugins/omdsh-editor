@@ -3,7 +3,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import type { SessionId, WorkspaceListState } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SessionId } from '@deepseek-ai/dsh-session'
+import type { WorkspaceSnapshot } from '@deepseek-ai/dsh-api-workspace-controller/client'
 import { EditorPicker, PLACEHOLDER_PREFIX, buildItems, directoryOf } from '../src/client/EditorPicker.tsx'
 import type { EditorPickerProps, EditorPickerState } from '../src/client/contract.ts'
 import { en } from '../src/client/locales.ts'
@@ -48,8 +49,8 @@ function mount(state: Partial<EditorPickerState>, workspaces: readonly { path: s
   const props = {
     sessionId: SESSION,
     useEditorPicker: (select: (value: EditorPickerState) => unknown) => select(snapshot),
-    useWorkspaces: (select: (value: WorkspaceListState) => unknown) =>
-      select({ items: workspaces } as unknown as WorkspaceListState),
+    useWorkspaces: (select: (value: WorkspaceSnapshot) => unknown) =>
+      select({ items: workspaces } as unknown as WorkspaceSnapshot),
     t,
     ...spies,
   } as unknown as EditorPickerProps
@@ -181,12 +182,12 @@ describe('directoryOf', () => {
         { path: '/w/a', sessionIds: ['s9'] },
         { path: '/w/b', sessionIds: ['s1', 's2'] },
       ],
-    } as unknown as WorkspaceListState
+    } as unknown as WorkspaceSnapshot
     expect(directoryOf(state, SESSION)).toBe('/w/b')
   })
 
   it('reports nothing when no workspace claims it', () => {
-    const state = { items: [{ path: '/w/a', sessionIds: ['s9'] }] } as unknown as WorkspaceListState
+    const state = { items: [{ path: '/w/a', sessionIds: ['s9'] }] } as unknown as WorkspaceSnapshot
     expect(directoryOf(state, SESSION)).toBeUndefined()
   })
 })

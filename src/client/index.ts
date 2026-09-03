@@ -15,9 +15,12 @@
  * @module @omdsh-plugins/omdsh-editor/client
  */
 
-import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+// Type-only: pulls `ctx.slots` (moved out of dsh-client-runtime onto the renderer).
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type { EditorPickerInjected } from './contract.ts'
 import { EditorPickerController, browserDeps } from './controller.ts'
 import { EditorPicker } from './EditorPicker.tsx'

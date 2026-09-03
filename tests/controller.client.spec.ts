@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it, vi } from 'vitest'
-import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 import { EDITORS_PATH, OPEN_PATH } from '../src/shared.ts'
 import { EditorPickerController } from '../src/client/controller.ts'
 import type { EditorPickerDeps } from '../src/client/controller.ts'

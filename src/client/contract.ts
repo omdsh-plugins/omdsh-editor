@@ -8,10 +8,13 @@
  */
 
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type { ObservableSnapshot, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
+import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 // Type-only: pulls ui-conversation's SlotMap merge (the target slot) into this
 // program. A value import would be a client-bundle purity error.
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+// Type-only: pulls `ctx.slots` (moved out of dsh-client-runtime onto the renderer).
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type { EditorDescriptor } from '../shared.ts'
 
 /** How far the picker has got with the host's list of installed applications. */

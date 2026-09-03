@@ -21,7 +21,8 @@ import type { ReactNode } from 'react'
 import clsx from 'clsx'
 import { IconChevronDownOutline14, Menu, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { MenuEntry } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { SessionId, WorkspaceListState } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SessionId } from '@deepseek-ai/dsh-session'
+import type { WorkspaceSnapshot } from '@deepseek-ai/dsh-api-workspace-controller/client'
 import type { CatalogStatus, EditorPickerProps } from './contract.ts'
 import type { EditorDescriptor } from '../shared.ts'
 import { EditorGlyph } from './EditorGlyph.tsx'
@@ -44,7 +45,7 @@ export const PLACEHOLDER_PREFIX = 'placeholder:'
  * @param sessionId - the current conversation.
  * @returns the absolute path, or undefined when no workspace claims it.
  */
-export function directoryOf(workspaces: WorkspaceListState, sessionId: SessionId): string | undefined {
+export function directoryOf(workspaces: WorkspaceSnapshot, sessionId: SessionId): string | undefined {
   return workspaces.items.find(item => item.sessionIds.includes(sessionId))?.path
 }
 
